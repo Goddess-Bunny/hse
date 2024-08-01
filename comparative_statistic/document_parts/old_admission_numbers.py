@@ -58,7 +58,7 @@ def fetch_old_df(path, date, lvl, CAMPUS):
                         names[1] = file
 
     return pd.read_excel(
-        f'/Users/s/Desktop/Admission Numbers 2024/tables_2023/{date.strftime('%Y-%m-%d')}/{names[lvl]}')
+        fr'C:\Users\Huawei MateBook\Downloads\Admission Numbers 2024\tables_2023\{date.strftime('%Y-%m-%d')}\{names[lvl]}')
 
 
 def write_old_admission(wb, ws, programs, lvl, CAMPUS, CUR_DATE, info=False, col_correspondence=None, PAID_ONLY=False):
@@ -66,12 +66,12 @@ def write_old_admission(wb, ws, programs, lvl, CAMPUS, CUR_DATE, info=False, col
         CAMPUS = 'Нижний Новгород'
 
     dates = np.array([datetime.strptime(dt, '%Y-%m-%d').date()
-                      for dt in os.listdir('/Users/s/Desktop/Admission Numbers 2024/tables_2023') if '2023' in dt])
+                      for dt in os.listdir(r'C:\Users\Huawei MateBook\Downloads\Admission Numbers 2024\tables_2023') if '2023' in dt])
 
-    masks = masks_lvl('/Users/s/Desktop/Admission Numbers 2024/tables_2023', dates, CAMPUS)
+    masks = masks_lvl(r'C:\Users\Huawei MateBook\Downloads\Admission Numbers 2024\tables_2023', dates, CAMPUS)
 
     idx, days_till_end, cur_days_till_end = closest_date_idx(dates[masks[bool(lvl)]], CUR_DATE)
-    df_old = fetch_old_df('/Users/s/Desktop/Admission Numbers 2024/tables_2023',
+    df_old = fetch_old_df(r'C:\Users\Huawei MateBook\Downloads\Admission Numbers 2024\tables_2023',
                           dates[masks[bool(lvl)]][idx], bool(lvl), CAMPUS)
     print(df_old)
     if lvl == 0:
@@ -88,7 +88,7 @@ def write_old_admission(wb, ws, programs, lvl, CAMPUS, CUR_DATE, info=False, col
                          'bvi_admit_old', 'vsosh_admit_old', 'paid_admit_old', 'paid_old']
 
     elif lvl >= 1:
-        last_stat = pd.read_excel(f'/Users/s/Desktop/Admission Numbers 2024/last_year_mag_{CAMPUS}.xlsx')
+        last_stat = pd.read_excel(fr'C:\Users\Huawei MateBook\Downloads\Admission Numbers 2024\last_year_mag_{CAMPUS}.xlsx')
 
         if not PAID_ONLY:
             if 'высшая лига' in df_old.iloc[3, 14].lower():

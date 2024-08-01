@@ -19,10 +19,10 @@ CUR_DATE = datetime.today()
 PAID_ONLY = True
 
 # ПОСТАВИТЬ СВОИ ПУТИ СЮДА
-pathToOutputFolder = "/Users/s/Desktop/Admission2024/"
-pathOfInputsFolder = '/Users/s/Desktop/Admission Numbers 2024/'
+pathToOutputFolder = r'C:\Users\Huawei MateBook\Downloads\Admission2024'
+pathOfInputsFolder = r'C:\Users\Huawei MateBook\Downloads\Admission Numbers 2024\\'
 
-pathStat = pathToOutputFolder + f"{CAMPUS}/{CUR_DATE.strftime('%Y-%m-%d')}/"
+pathStat = pathToOutputFolder + fr"\{CAMPUS}\{CUR_DATE.strftime('%Y-%m-%d')}\\"
 
 try:
     os.mkdir(pathStat)
@@ -40,7 +40,7 @@ ws = wb.add_worksheet('Сравнение')
 programs = programs[programs['campus'] == CAMPUS]
 
 # WRITE CODE HERE
-# --------------
+programs = programs[(programs['online'] == True) | (programs['format'] == 'Очно-заочное обучение')]
 
 # getting old admission info (dates and total number of students)
 days_till_end, cur_days_till_end, prev_date, old_tot_inc_students = write_old_admission(wb, ws, programs, LVL, CAMPUS,

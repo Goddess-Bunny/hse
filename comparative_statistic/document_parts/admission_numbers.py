@@ -15,7 +15,7 @@ def process_number(x):
 
 
 def write_asav_numbers(wb, ws, programs, col_correspondence, LVL, CAMPUS, CUR_DATE, PAID_ONLY, pathOfInputs):
-    programs_adm = pd.read_excel(pathOfInputs + '/tables_2024/mag/' + f'{CAMPUS}/{CUR_DATE.strftime('%Y-%m-%d')}/mag_adm.xlsx')
+    programs_adm = pd.read_excel(pathOfInputs + r'\tables_2024\mag\\' + fr'{CAMPUS}\{CUR_DATE.strftime('%Y-%m-%d')}\mag_adm.xlsx')
 
     programs_adm = programs_adm.iloc[5:199, :7]
     total_inc_students = programs_adm.iloc[-1, 1]
