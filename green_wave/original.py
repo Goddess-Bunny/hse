@@ -51,8 +51,8 @@ if CAMPUS == campuses[1] or CAMPUS == campuses[2] or CAMPUS == campuses[3]:
 # writing admission numbers
 
 # reading all admits
-spisok_all = pd.read_excel('/Users/s/Desktop/GW2024/spisok_all.xlsx')
-spisok = pd.read_excel('/Users/s/Desktop/GW2024/spisok.xlsx')
+spisok_all = pd.read_excel('/Users/s/Desktop/GW2024/spisok_all.xlsx', sheet_name='TDSheet')
+spisok = pd.read_excel('/Users/s/Desktop/GW2024/spisok.xlsx', sheet_name='TDSheet')
 
 cur_case = None
 priors, indices = [[], []], [[], []]
@@ -60,9 +60,6 @@ for sp in [spisok, spisok_all]:
     for _, row in sp.iterrows():
         if row['Заявление забрано'] == 'Да':
             continue
-
-        if row['Абитуриент'] == 'Губина Мария Данииловна':
-            print(priors[0], indices[0], np.argsort(priors[0]))
 
         if cur_case != row['Личное дело']:
             cur_case = row['Личное дело']
@@ -83,57 +80,55 @@ for sp in [spisok, spisok_all]:
             priors[1].append(row['Приоритет'])
             indices[1].append(_)
 
-print(spisok[spisok['Абитуриент'] == 'Губина Мария Данииловна'][['Конкурсная группа', 'Приоритет']])
-
-# reading the work quota
-
-applications_rvr = pd.read_excel('/Users/s/Desktop/GW2024/заявки/список.xlsx')
-applications_rvr = applications_rvr[applications_rvr['Статус заявки'] != 'Отозвана гражданином'].reset_index(
-    drop=True)
-all_quotes = pd.read_excel('/Users/s/Desktop/GW2024/заявки/предложения.xlsx', sheet_name='Бак_спец (по квоте)')
-all_quotes.columns = list(all_quotes.iloc[8, :])
-all_quotes = all_quotes.iloc[9:, :].reset_index(drop=True)
-all_quotes = all_quotes[all_quotes['Кампус'] == "Москва"]
-work_apps = spisok
-
-work_apps = work_apps[(work_apps['Конкурсная группа']).str.contains('О Б ЦП') & (work_apps['Приоритет'] == 1) &
-                      (work_apps['Заявление забрано'] == 'Нет')]
-work_apps['Образовательная программа'] = work_apps['Конкурсная группа'].apply(lambda x: x[:x.find(' (')])
-
-all_quotes['Номер предложения'] = all_quotes['№ Предложения'].astype(np.int64)
-applications_rvr = applications_rvr.set_index('Номер предложения').join(all_quotes.set_index('Номер предложения'))[
-    ['Направление/Специальность', 'Образовательная программа', 'Гражданин']].reset_index()
-
-closed = pd.read_excel('/Users/s/Desktop/GW2024/заявки/закрытые.xlsx')[
-    ['ФИО', "Направление/Специальность", 'Образовательная программа']]
-closed_num_of_abitur = closed.groupby(["Направление/Специальность", 'Образовательная программа']).count()[['ФИО']]
-
-work_apps['abitur'] = work_apps['Абитуриент'].apply(lambda x: x[:x.find(' ') + 2].lower())
-applications_rvr['abitur'] = applications_rvr['Гражданин'].apply(lambda x: x[:-1].lower() if len(x.split(' '))<3 else x[:x.find(' ') + 2].lower())
-work_apps = (work_apps.set_index(['abitur', 'Образовательная программа'])
-             .join(applications_rvr.set_index(['abitur', "Образовательная программа"]),
-                   rsuffix='_rvr').reset_index())
-
-work_apps = work_apps[~pd.isna(work_apps['Гражданин'])]
-work_apps['Номер предложения'] = work_apps['Номер предложения'].astype(np.int64)
-all_quotes['Номер предложения'] = all_quotes['№ Предложения'].astype(np.int64)
-num_of_admits = work_apps.groupby('Номер предложения')[['abitur']].nunique().join(
-    all_quotes.set_index('Номер предложения'), how='right', rsuffix='_rvr').reset_index()
-num_of_admits.loc[:, 'abitur'].fillna(0, inplace=True)
-num_of_admits['total_admits'] = np.min(num_of_admits[['abitur', 'Планируемое число договоров']], axis=1)
-
-programs_work = num_of_admits.groupby(['Направление/Специальность', 'Образовательная программа'])[
-    ['Планируемое число договоров', 'abitur', 'total_admits']].sum()
-programs_work = programs_work.join(closed_num_of_abitur, how='outer')[['total_admits', 'ФИО']].fillna(0)
-
-programs_work = np.sum(programs_work, axis=1).reset_index()[
-    ['Направление/Специальность', 'Образовательная программа', 0]]
-
-for i, row in programs_work.iterrows():
-    if 'Реклама' in row['Направление/Специальность'] and 'Реклама' in row['Образовательная программа']:
-        programs_work.loc[i, 'Образовательная программа'] = 'Реклама и связи с общественностью (направление подготовки 42.03.01 Реклама и связи с общественностью)'
-    if 'Медиакоммуникации' in row['Направление/Специальность'] and 'Реклама' in row['Образовательная программа']:
-        programs_work.loc[i, 'Образовательная программа'] = 'Реклама и связи с общественностью (направление подготовки 42.03.05 Медиакоммуникации)'
+# # reading the work quota
+#
+# applications_rvr = pd.read_excel('/Users/s/Desktop/GW2024/заявки/список.xlsx')
+# applications_rvr = applications_rvr[applications_rvr['Статус заявки'] != 'Отозвана гражданином'].reset_index(
+#     drop=True)
+# all_quotes = pd.read_excel('/Users/s/Desktop/GW2024/заявки/предложения.xlsx', sheet_name='Бак_спец (по квоте)')
+# all_quotes.columns = list(all_quotes.iloc[8, :])
+# all_quotes = all_quotes.iloc[9:, :].reset_index(drop=True)
+# all_quotes = all_quotes[all_quotes['Кампус'] == "Москва"]
+# work_apps = spisok
+#
+# work_apps = work_apps[(work_apps['Конкурсная группа']).str.contains('О Б ЦП') & (work_apps['Приоритет'] == 1) &
+#                       (work_apps['Заявление забрано'] == 'Нет')]
+# work_apps['Образовательная программа'] = work_apps['Конкурсная группа'].apply(lambda x: x[:x.find(' (')])
+#
+# all_quotes['Номер предложения'] = all_quotes['№ Предложения'].astype(np.int64)
+# applications_rvr = applications_rvr.set_index('Номер предложения').join(all_quotes.set_index('Номер предложения'))[
+#     ['Направление/Специальность', 'Образовательная программа', 'Гражданин']].reset_index()
+#
+# closed = pd.read_excel('/Users/s/Desktop/GW2024/заявки/закрытые.xlsx')[
+#     ['ФИО', "Направление/Специальность", 'Образовательная программа']]
+# closed_num_of_abitur = closed.groupby(["Направление/Специальность", 'Образовательная программа']).count()[['ФИО']]
+#
+# work_apps['abitur'] = work_apps['Абитуриент'].apply(lambda x: x[:x.find(' ') + 2].lower())
+# applications_rvr['abitur'] = applications_rvr['Гражданин'].apply(lambda x: x[:-1].lower() if len(x.split(' '))<3 else x[:x.find(' ') + 2].lower())
+# work_apps = (work_apps.set_index(['abitur', 'Образовательная программа'])
+#              .join(applications_rvr.set_index(['abitur', "Образовательная программа"]),
+#                    rsuffix='_rvr').reset_index())
+#
+# work_apps = work_apps[~pd.isna(work_apps['Гражданин'])]
+# work_apps['Номер предложения'] = work_apps['Номер предложения'].astype(np.int64)
+# all_quotes['Номер предложения'] = all_quotes['№ Предложения'].astype(np.int64)
+# num_of_admits = work_apps.groupby('Номер предложения')[['abitur']].nunique().join(
+#     all_quotes.set_index('Номер предложения'), how='right', rsuffix='_rvr').reset_index()
+# num_of_admits.loc[:, 'abitur'].fillna(0, inplace=True)
+# num_of_admits['total_admits'] = np.min(num_of_admits[['abitur', 'Планируемое число договоров']], axis=1)
+#
+# programs_work = num_of_admits.groupby(['Направление/Специальность', 'Образовательная программа'])[
+#     ['Планируемое число договоров', 'abitur', 'total_admits']].sum()
+# programs_work = programs_work.join(closed_num_of_abitur, how='outer')[['total_admits', 'ФИО']].fillna(0)
+#
+# programs_work = np.sum(programs_work, axis=1).reset_index()[
+#     ['Направление/Специальность', 'Образовательная программа', 0]]
+#
+# for i, row in programs_work.iterrows():
+#     if 'Реклама' in row['Направление/Специальность'] and 'Реклама' in row['Образовательная программа']:
+#         programs_work.loc[i, 'Образовательная программа'] = 'Реклама и связи с общественностью (направление подготовки 42.03.01 Реклама и связи с общественностью)'
+#     if 'Медиакоммуникации' in row['Направление/Специальность'] and 'Реклама' in row['Образовательная программа']:
+#         programs_work.loc[i, 'Образовательная программа'] = 'Реклама и связи с общественностью (направление подготовки 42.03.05 Медиакоммуникации)'
 
 # reading the rankings
 rankings = pd.read_excel(f'/Users/s/Desktop/GW2024/konkurs_{CAMPUS}.xlsx').iloc[4:, :]
@@ -272,6 +267,8 @@ konkurs_short = konkurs.copy()
 konkurs = konkurs.set_index(['fio', 'name']).join(spisok_all_short.set_index(['fio', "name"]), how='inner', rsuffix='_s').reset_index()
 konkurs.loc[:, 'name'] = konkurs['name'].apply(rename_konkurs, args=[CAMPUS])
 
+konkurs.to_csv(f'/Users/s/Desktop/GW2024/konkurs_{CAMPUS}.csv', index=False, encoding='utf-8-sig')
+
 spisok['Платно'] = spisok['Конкурсная группа'].apply(lambda x: 1 if x.find('(О К)') != -1 else 0)
 spisok['Целевое'] = spisok['Конкурсная группа'].apply(lambda x: 1 if x.find('(О Б ЦП)') != -1 else 0)
 spisok['Отдельная'] = spisok['Конкурсная группа'].apply(
@@ -388,25 +385,25 @@ bvi = (spisok[(spisok['Платно'] == 0) & (spisok['Филиал'] == CAMPUS)
        .pivot_table(values=['Код'], index=['Образовательная программа'], aggfunc='count')).reset_index()
 bvi.columns = ['name', 'bvi_admitted']
 print(programs['name'].unique(), bvi.loc[2, 'name'])
-if CAMPUS != campuses[0]:
-    work = (spisok[(spisok['Платно'] == 0) & (spisok['Филиал'] == CAMPUS) &
-                  (spisok['Заявление забрано'] == 'Нет') & (spisok['Приоритет'] == 1)]
-           .pivot_table(values=['Целевое'], index=['Образовательная программа'], aggfunc='sum')).reset_index()
-    work.columns = ['name', 'work_admitted']
-
-    if CAMPUS == campuses[3]:
-        work.loc[work['name'] == 'Компьютерные науки и технологии (направление подготовки 09.03.04 Программная инженерия)', 'work_admitted'] += 1
-        work.loc[work['name'] == 'Международный бакалавриат по бизнесу и экономике', 'work_admitted'] += 2
-    if CAMPUS == campuses[2]:
-        work.loc[work['name'] == 'Разработка информационных систем для бизнеса (направление подготовки 09.03.04 Программная инженерия)', 'work_admitted'] += 1
-        work.loc[work['name'] == 'Разработка информационных систем для бизнеса (направление подготовки 38.03.05 Бизнес-информатика)', 'work_admitted'] += 2
-    if CAMPUS == campuses[1]:
-        work.loc[work['name'] == 'Аналитика в экономике', 'work_admitted'] += 1
-else:
-    work = programs_work[['Образовательная программа', 0]]
-    work.columns = ['name', 'work_admitted']
-print(work.iloc[10:20], final.loc[10:20, ['work', 'work_max']])
-work.loc[:, 'work_admitted'] = work.apply(lambda x: np.nan if final.set_index('name').loc[x['name'], 'work'] == '-' else min(x['work_admitted'], final.set_index('name').loc[x['name'], 'work'], final.set_index('name').loc[x['name'], 'work_max']), axis=1)
+# if CAMPUS != campuses[0]:
+#     work = (spisok[(spisok['Платно'] == 0) & (spisok['Филиал'] == CAMPUS) &
+#                   (spisok['Заявление забрано'] == 'Нет') & (spisok['Приоритет'] == 1)]
+#            .pivot_table(values=['Целевое'], index=['Образовательная программа'], aggfunc='sum')).reset_index()
+#     work.columns = ['name', 'work_admitted']
+#
+#     if CAMPUS == campuses[3]:
+#         work.loc[work['name'] == 'Компьютерные науки и технологии (направление подготовки 09.03.04 Программная инженерия)', 'work_admitted'] += 1
+#         work.loc[work['name'] == 'Международный бакалавриат по бизнесу и экономике', 'work_admitted'] += 2
+#     if CAMPUS == campuses[2]:
+#         work.loc[work['name'] == 'Разработка информационных систем для бизнеса (направление подготовки 09.03.04 Программная инженерия)', 'work_admitted'] += 1
+#         work.loc[work['name'] == 'Разработка информационных систем для бизнеса (направление подготовки 38.03.05 Бизнес-информатика)', 'work_admitted'] += 2
+#     if CAMPUS == campuses[1]:
+#         work.loc[work['name'] == 'Аналитика в экономике', 'work_admitted'] += 1
+# else:
+#     work = programs_work[['Образовательная программа', 0]]
+#     work.columns = ['name', 'work_admitted']
+# print(work.iloc[10:20], final.loc[10:20, ['work', 'work_max']])
+# work.loc[:, 'work_admitted'] = work.apply(lambda x: np.nan if final.set_index('name').loc[x['name'], 'work'] == '-' else min(x['work_admitted'], final.set_index('name').loc[x['name'], 'work'], final.set_index('name').loc[x['name'], 'work_max']), axis=1)
 
 special = (spisok[(spisok['Платно'] == 0) & (spisok['Филиал'] == CAMPUS) &
               (spisok['Заявление забрано'] == 'Нет') & (spisok['Приоритет'] == 1)]
@@ -421,10 +418,10 @@ separate.columns = ['name', 'separate_admitted']
 separate.loc[:, 'separate_admitted'] = separate.apply(lambda x: np.nan if final.set_index('name').loc[x['name'], 'separate'] == '-' else min(x['separate_admitted'], final.set_index('name').loc[x['name'], 'separate']), axis=1)
 
 pivots = [minkcp_konkurs, minbvi_konkurs, minwork_konkurs, minspecial_konkurs, minseparate_konkurs,
-          bvi, work, special, separate, allpriority_konkurs, priority1_konkurs, priority2_konkurs,
+          bvi, special, separate, allpriority_konkurs, priority1_konkurs, priority2_konkurs,
           priority3_konkurs]
 pivot_variables = [['kcp_leftover_admit'], ['bvi_admit'], ['work_admit'], ['special_admit'], ['separate_admit'],
-                   ['bvi_admitted'], ['work_admitted'], ['special_admitted'], ['separate_admitted'],
+                   ['bvi_admitted'], ['special_admitted'], ['separate_admitted'],
                    ['ingreen_admit', 'inyellow_admit'], ['ingreen_admit_priority1', 'inyellow_admit_priority1'],
                    ['ingreen_admit_priority2'], ['ingreen_admit_priority3']]
 

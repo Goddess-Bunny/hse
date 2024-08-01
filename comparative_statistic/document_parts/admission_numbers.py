@@ -14,9 +14,8 @@ def process_number(x):
     return ans
 
 
-def write_asav_numbers(wb, ws, programs, col_correspondence, LVL, CAMPUS, CUR_DATE):
-    programs_adm = pd.read_excel(f'/Users/s/Desktop/Admission Numbers 2024/tables_2024/mag/' + f'{CAMPUS}/'
-                                                                                               f'{CUR_DATE.strftime('%Y-%m-%d')}/mag_adm.xlsx')
+def write_asav_numbers(wb, ws, programs, col_correspondence, LVL, CAMPUS, CUR_DATE, PAID_ONLY, pathOfInputs):
+    programs_adm = pd.read_excel(pathOfInputs + '/tables_2024/mag/' + f'{CAMPUS}/{CUR_DATE.strftime('%Y-%m-%d')}/mag_adm.xlsx')
 
     programs_adm = programs_adm.iloc[5:199, :7]
     total_inc_students = programs_adm.iloc[-1, 1]
@@ -75,7 +74,10 @@ def write_asav_numbers(wb, ws, programs, col_correspondence, LVL, CAMPUS, CUR_DA
             programs.loc[programs['school'] != '-', 'name']), 'paid'] -= \
             programs.loc[programs['school'] != '-', 'school'].iloc[0]
 
-    program_variables = ['kcp_admit', 'work_admit', 'paid', 'paid_admit']
+    if not PAID_ONLY:
+        program_variables = ['kcp_admit', 'work_admit', 'paid', 'paid_admit']
+    else:
+        program_variables = ['paid', 'paid_admit']
 
     join_programs = (programs.set_index(['major', 'name'])
                      .join(adm_df.set_index(['major', 'name']), rsuffix='2').reset_index())

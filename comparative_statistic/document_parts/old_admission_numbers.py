@@ -61,7 +61,7 @@ def fetch_old_df(path, date, lvl, CAMPUS):
         f'/Users/s/Desktop/Admission Numbers 2024/tables_2023/{date.strftime('%Y-%m-%d')}/{names[lvl]}')
 
 
-def write_old_admission(wb, ws, programs, lvl, CAMPUS, CUR_DATE, info=False, col_correspondence=None):
+def write_old_admission(wb, ws, programs, lvl, CAMPUS, CUR_DATE, info=False, col_correspondence=None, PAID_ONLY=False):
     if CAMPUS == 'Нижний Новгород':
         CAMPUS = 'Нижний Новгород'
 
@@ -73,7 +73,7 @@ def write_old_admission(wb, ws, programs, lvl, CAMPUS, CUR_DATE, info=False, col
     idx, days_till_end, cur_days_till_end = closest_date_idx(dates[masks[bool(lvl)]], CUR_DATE)
     df_old = fetch_old_df('/Users/s/Desktop/Admission Numbers 2024/tables_2023',
                           dates[masks[bool(lvl)]][idx], bool(lvl), CAMPUS)
-
+    print(df_old)
     if lvl == 0:
         last_stat = pd.read_excel(f'/Users/s/Desktop/Admission Numbers 2024/last_year_bac_{CAMPUS}.xlsx')
         if CAMPUS == 'Москва':
@@ -90,32 +90,43 @@ def write_old_admission(wb, ws, programs, lvl, CAMPUS, CUR_DATE, info=False, col
     elif lvl >= 1:
         last_stat = pd.read_excel(f'/Users/s/Desktop/Admission Numbers 2024/last_year_mag_{CAMPUS}.xlsx')
 
-        if 'высшая лига' in df_old.iloc[3, 14].lower():
-            if CAMPUS == 'Москва':
-                columns_old = [0, 1, 5, 2, 7, 9, 21, 19]
-                df_old.iloc[:, 19] = last_stat.iloc[:, 19]
+        if not PAID_ONLY:
+            if 'высшая лига' in df_old.iloc[3, 14].lower():
+                if CAMPUS == 'Москва':
+                    columns_old = [0, 1, 5, 2, 7, 9, 21, 19]
+                    df_old.iloc[:, 19] = last_stat.iloc[:, 19]
+                else:
+                    columns_old = [0, 2, 6, 4, 8, 10, 22, 20]
+                    df_old.iloc[:, 20] = last_stat.iloc[:, 20]
             else:
-                columns_old = [0, 2, 6, 4, 8, 10, 22, 20]
-                df_old.iloc[:, 20] = last_stat.iloc[:, 20]
+                columns_old = [0, 1, 3, 2, 7, 9, 14, 13]
+                df_old.iloc[:, 13] = last_stat.iloc[:, 12]
+
+            columns_names = ['name', 'kcp_old', 'work_old', 'school_old',
+                             'kcp_admit_old', 'work_admit_old', 'paid_admit_old', 'paid_old']
         else:
-            columns_old = [0, 1, 3, 2, 7, 9, 14, 13]
-            df_old.iloc[:, 13] = last_stat.iloc[:, 12]
+            columns_old = [0, 2, 4]
 
-        columns_names = ['name', 'kcp_old', 'work_old', 'school_old',
-                         'kcp_admit_old', 'work_admit_old', 'paid_admit_old', 'paid_old']
+            columns_names = ['name', 'paid_old', 'paid_admit_old']
 
-    df_old_total = df_old.iloc[5:, [0, 1]]
-    df_old = df_old.iloc[5:, columns_old].reset_index(drop=True)
-    df_old.columns = columns_names
+    if not PAID_ONLY:
+        df_old_total = df_old.iloc[5:, [0, 1]]
+        row_total_students = df_old_total.shape[0] - 1
 
-    row_total_students = df_old_total.shape[0]-1
-
-    while pd.isna(df_old_total.iloc[row_total_students, 1]):
-        row_total_students -= 1
-    if CAMPUS == 'Москва':
-        old_tot_inc_students = df_old_total.iloc[row_total_students-1, 1]
+        while pd.isna(df_old_total.iloc[row_total_students, 1]):
+            row_total_students -= 1
+        if CAMPUS == 'Москва':
+            old_tot_inc_students = df_old_total.iloc[row_total_students - 1, 1]
+        else:
+            old_tot_inc_students = df_old_total.iloc[row_total_students, 1]
     else:
-        old_tot_inc_students = df_old_total.iloc[row_total_students, 1]
+        old_tot_inc_students = 0
+
+    if not PAID_ONLY:
+        df_old = df_old.iloc[5:, columns_old].reset_index(drop=True)
+    else:
+        df_old = df_old.iloc[4:, columns_old].reset_index(drop=True)
+    df_old.columns = columns_names
 
     if lvl == 0:
         for col in ['kcp', 'work', 'special', 'separate', 'paid']:
@@ -123,7 +134,7 @@ def write_old_admission(wb, ws, programs, lvl, CAMPUS, CUR_DATE, info=False, col
             df_old.loc[:, col+'_admit_old'] = df_old.apply(
                 lambda x: 0 if pd.isna(x[col+'_admit_old']) and (not pd.isna(x[col+'_old']) and x[col+'_old'] != '-')
                 else x[col+'_admit_old'], axis=1)
-    if lvl >= 1:
+    if lvl >= 1 and not PAID_ONLY:
         for col in ['kcp', 'work']:
             df_old.loc[:, col+'_admit_old'] = df_old.apply(
                 lambda x: 0 if pd.isna(x[col+'_admit_old']) and (not pd.isna(x[col+'_old']) and x[col+'_old'] != '-')

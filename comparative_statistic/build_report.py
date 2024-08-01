@@ -16,6 +16,8 @@ campuses = ['Москва', 'Санкт-Петербург', 'Пермь', 'Ни
 CAMPUS = campuses[0]
 CUR_DATE = datetime.today()
 
+PAID_ONLY = True
+
 # ПОСТАВИТЬ СВОИ ПУТИ СЮДА
 pathToOutputFolder = "/Users/s/Desktop/Admission2024/"
 pathOfInputsFolder = '/Users/s/Desktop/Admission Numbers 2024/'
@@ -42,11 +44,11 @@ programs = programs[programs['campus'] == CAMPUS]
 
 # getting old admission info (dates and total number of students)
 days_till_end, cur_days_till_end, prev_date, old_tot_inc_students = write_old_admission(wb, ws, programs, LVL, CAMPUS,
-                                                                                        CUR_DATE, info=True)
+                                                                                        CUR_DATE, info=True, PAID_ONLY=PAID_ONLY)
 
 # creating header
 num_col, col_correspondence = create_header(wb, ws, LVL, CUR_DATE, num_days=cur_days_till_end,
-                                            num_days_old=days_till_end)
+                                            num_days_old=days_till_end, PAID_ONLY=PAID_ONLY)
 # writing down all programs
 
 starred_programs, stars_start = [], 1
@@ -62,30 +64,31 @@ if LVL == BAC and CAMPUS == 'Москва':
 num_row = list_programs(wb, ws, programs, stars=starred_programs, stars_start=stars_start, row=5)
 
 # writing old admission numbers
-write_old_admission(wb, ws, programs, LVL, CAMPUS, CUR_DATE, col_correspondence=col_correspondence)
+write_old_admission(wb, ws, programs, LVL, CAMPUS, CUR_DATE, col_correspondence=col_correspondence, PAID_ONLY=PAID_ONLY)
 
-# drawing green line separating free and paid places
-for i in range(5, num_row):
-    RowWriter(wb, ws, row=i, col=col_correspondence['green']).insert_green()
+if not PAID_ONLY:
+    # drawing green line separating free and paid places
+    for i in range(5, num_row):
+        RowWriter(wb, ws, row=i, col=col_correspondence['green']).insert_green()
 
-# writing the number of places at each program for this year
-if LVL == BAC:
-    program_variables = ['kcp', 'work', 'special', 'separate']
-if LVL >= MAG:
-    program_variables = ['kcp', 'school', 'work']
+    # writing the number of places at each program for this year
+    if LVL == BAC:
+        program_variables = ['kcp', 'work', 'special', 'separate']
+    if LVL >= MAG:
+        program_variables = ['kcp', 'school', 'work']
 
-cols = col_correspondence[program_variables]
+    cols = col_correspondence[program_variables]
 
-write_programs(wb, ws, programs, cols, program_variables)
+    write_programs(wb, ws, programs, cols, program_variables)
 
 # reading the asav/aic-pk file
 if LVL >= MAG:
-    total_inc_students = write_asav_numbers(wb, ws, programs, col_correspondence, LVL, CAMPUS, CUR_DATE)
+    total_inc_students = write_asav_numbers(wb, ws, programs, col_correspondence, LVL, CAMPUS, CUR_DATE, PAID_ONLY, pathOfInputsFolder)
 else:
     total_inc_students = write_aicpk_numbers(wb, ws, programs, col_correspondence, CAMPUS, CUR_DATE)
 
 # processing the preferences/olympiad information
-if LVL == MAG:
+if LVL == MAG and not PAID_ONLY:
     admissible = {}
     admissible['yaprofi'] = write_yaprofi_potential(wb, ws, programs, col_correspondence, CAMPUS)
     admissible['vl'] = write_vl_potential(wb, ws, programs, col_correspondence, CAMPUS, CUR_DATE)
@@ -95,19 +98,20 @@ if LVL == MAG:
 if LVL == BAC:
     write_olimp_vsosh(wb, ws, programs, col_correspondence, CAMPUS, CUR_DATE)
 
+if not PAID_ONLY:
 # writing the total number of prospective students
-RowWriter(wb, ws, row=num_row).add_cols(
-    [f"Количество абитуриентов на {CUR_DATE.strftime('%d.%m.%Y')}" +
-     #f"\n(за {cur_days_till_end} {process_day(cur_days_till_end)} до конца приема):", total_inc_students],
-    "\n(Прием документов завершился)", total_inc_students],
-    [create_format(wb, bold=True, halign='left', indent=1)] * 2, [1] * 2)
-RowWriter(wb, ws, row=num_row + 1).add_cols(
-    [f"Количество абитуриентов на {prev_date.strftime('%d.%m.%Y')}:" +
-     #f"\n(за {days_till_end} {process_day(days_till_end)} до конца приема):", old_tot_inc_students],
-     "\n(Прием документов завершился)", old_tot_inc_students],
-    [create_format(wb, bold=True, halign='left', font_color='#0066CC', indent=1)] * 2, [1] * 2)
+    RowWriter(wb, ws, row=num_row).add_cols(
+        [f"Количество абитуриентов на {CUR_DATE.strftime('%d.%m.%Y')}" +
+         #f"\n(за {cur_days_till_end} {process_day(cur_days_till_end)} до конца приема):", total_inc_students],
+        "\n(Прием документов завершился)", total_inc_students],
+        [create_format(wb, bold=True, halign='left', indent=1)] * 2, [1] * 2)
+    RowWriter(wb, ws, row=num_row + 1).add_cols(
+        [f"Количество абитуриентов на {prev_date.strftime('%d.%m.%Y')}:" +
+         #f"\n(за {days_till_end} {process_day(days_till_end)} до конца приема):", old_tot_inc_students],
+         "\n(Прием документов завершился)", old_tot_inc_students],
+        [create_format(wb, bold=True, halign='left', font_color='#0066CC', indent=1)] * 2, [1] * 2)
 
-if LVL == MAG:
+if LVL == MAG and not PAID_ONLY:
     ws.write(num_row + 3, 0, '* общие суммы и суммы по направлениям подготовки\n' +
              'считались как кол-во уникальных абитуриентов. Учитываются только дипломанты-выпускники 2024 года',
              create_format(wb, italic=True, indent=1, border=False, halign='left', text_wrap=False))
@@ -162,9 +166,10 @@ ws.set_paper(8)
 ws.set_margins(top=0.4, bottom=0.4, left=0.1, right=0.1)
 ws.fit_to_pages(width=1, height=0)
 ws.set_footer('&RСтраница &P из &N')
-ws.set_column(1, col_correspondence['green'] - 1, 12.17)
-ws.set_column(col_correspondence['green'], col_correspondence['green'], 2)
-ws.set_column(col_correspondence['green'] + 1, 30, 12.17)
+if not PAID_ONLY:
+    ws.set_column(1, col_correspondence['green'] - 1, 12.17)
+    ws.set_column(col_correspondence['green'], col_correspondence['green'], 2)
+    ws.set_column(col_correspondence['green'] + 1, 30, 12.17)
 ws.set_row(4, 250)
 ws.set_row(3, 30)
 
