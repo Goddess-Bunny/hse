@@ -246,4 +246,18 @@ def create_header_original(wb, ws, CAMPUS):
 
     head.add_cols(waves, info_style, info_width)
 
+    # adding
+
+    waves = ['Балл фактического закрытия бюджетных мест', 'Количество зачисленных на основные конкурсные места',
+             'Кол-во абитуриентов, которые могли бы претендовать на зачисление по зеленой волне за счет НИУ ВШЭ',
+             'Кол-во абитуриентов БВИ сверх мест КЦП - места за счет НИУ ВШЭ']
+    names = ['admit_score', 'admit_number', 'possible_admit', 'possible_bvi']
+    columns |= {col_name: head.cur_col + i for i, col_name in enumerate(names)}
+
+    info_style = [header_elem_shortline] * len(names)
+    info_width = [1] * len(names)
+
+    head.add_cols(waves, info_style, info_width)
+
+
     return head.cur_col - 1, pd.Series(columns)

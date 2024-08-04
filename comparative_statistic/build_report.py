@@ -16,7 +16,7 @@ campuses = ['Москва', 'Санкт-Петербург', 'Пермь', 'Ни
 CAMPUS = campuses[0]
 CUR_DATE = datetime.today()
 
-PAID_ONLY = True
+PAID_ONLY = False
 
 # ПОСТАВИТЬ СВОИ ПУТИ СЮДА
 pathToOutputFolder = "/Users/s/Desktop/Admission2024/"

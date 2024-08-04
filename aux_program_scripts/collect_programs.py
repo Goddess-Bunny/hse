@@ -156,7 +156,6 @@ def join_new_old_progs(new, old, LVL, program_nans='-'):
     joined = (pre_joined.set_index(['format', 'major', 'name_old']).join(
         old.set_index(['format', 'major', 'name_old']), rsuffix='_old').
               reset_index(level=[0, 1]).reset_index(drop=True).fillna(program_nans))
-    print(joined.columns)
 
     #print(joined['name'][joined['kcp'] == '-'])
 

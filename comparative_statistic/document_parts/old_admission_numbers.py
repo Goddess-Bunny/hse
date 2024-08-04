@@ -2,7 +2,7 @@ import os
 from datetime import datetime, date
 import numpy as np
 import pandas as pd
-from aux_program_scripts.collect_programs import join_new_old_progs
+from aux_program_scripts.collect_programs import join_new_old_progs, parse_list
 from aux_program_scripts.write_programs import write_programs
 
 
@@ -73,7 +73,7 @@ def write_old_admission(wb, ws, programs, lvl, CAMPUS, CUR_DATE, info=False, col
     idx, days_till_end, cur_days_till_end = closest_date_idx(dates[masks[bool(lvl)]], CUR_DATE)
     df_old = fetch_old_df('/Users/s/Desktop/Admission Numbers 2024/tables_2023',
                           dates[masks[bool(lvl)]][idx], bool(lvl), CAMPUS)
-    print(df_old)
+
     if lvl == 0:
         last_stat = pd.read_excel(f'/Users/s/Desktop/Admission Numbers 2024/last_year_bac_{CAMPUS}.xlsx')
         if CAMPUS == 'Москва':
